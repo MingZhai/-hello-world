@@ -10,13 +10,18 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.Hashtable;
-
+import java.util.List;
+import org.jgroups.Address;
+import org.jgroups.JChannel;
+import org.jgroups.ReceiverAdapter;
+import org.jgroups.Message;
+import org.jgroups.View;
 //----------------------------------------------code added 21.06
 
 public class VSKeyValueReplica implements VSKeyValueRequestHandler{
 		String RepId;
 		String RepAdd;
-		VSKeyValueRequest _request ;
+		static VSKeyValueRequest _request ;
 		VSKeyValueReply _reply;
 		long time;
 		String value;
@@ -26,7 +31,7 @@ public class VSKeyValueReplica implements VSKeyValueRequestHandler{
 		
 	//export this replicate
 	public VSKeyValueReplica(String ID, String replicaAddresses){
-		this.RepId = "0";
+		this.RepId = ID;
 		this.RepAdd = replicaAddresses;
 		
 	}
@@ -59,10 +64,8 @@ public class VSKeyValueReplica implements VSKeyValueRequestHandler{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
-	
-		
 	}
+
 	// handle request from client
 	@Override
 	public void handleRequest(VSKeyValueRequest request) throws RemoteException {
@@ -120,6 +123,22 @@ public class VSKeyValueReplica implements VSKeyValueRequestHandler{
 	public static void main(String[] args) throws IOException{
 		VSKeyValueReplica replica = new VSKeyValueReplica(args[0],args[1]);
 		replica.init();
+		
+		//jgroups send message
+		JChannel channel = new JChannel(); 
+		channel.connect("ChatCluster");
+		Message msg = new Message(null, channel.getAddress(), _request);
+		channel.send(msg);
+		
+		// receive message
+		ReceiverAdapter receiver = new ReceiverAdapter();
+		channel.setReceiver(receiver);
+		channel.connect("ChatCluster");
+		
+		public void getState(Address target, long timeout) throws Exception{
+			
+		}
+  	    
 		System.out.println("replica start successfully");
 	}
 }
