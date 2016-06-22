@@ -10,6 +10,7 @@ import java.nio.file.Paths;
 import java.rmi.AccessException;
 import java.rmi.AlreadyBoundException;
 import java.rmi.NoSuchObjectException;
+import java.rmi.NotBoundException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -25,8 +26,14 @@ public class VSKeyValueClient implements VSKeyValueReplyHandler {
 	
 	/* The addresses of all potential replicas. */
 	private final InetSocketAddress[] replicaAddresses;
-	
-	
+	VSKeyValueRequest request ;
+	VSKeyValueRequestHandler replica;
+	VSKeyValueReply _reply;
+	Registry registry;
+	VSKeyValueReplyHandler Sc ;
+	String value;
+	int error;
+	long time;
 	public VSKeyValueClient(InetSocketAddress[] replicaAddresses) {
 		this.replicaAddresses = replicaAddresses;
 	}
@@ -38,36 +45,38 @@ public class VSKeyValueClient implements VSKeyValueReplyHandler {
 
 	public void init() {
 		// Export client
-		Remote Sc = null;
+	
 		try {
-			  Sc = UnicastRemoteObject.exportObject(this, 0);
+			  Sc = (VSKeyValueReplyHandler) UnicastRemoteObject.exportObject(this, 0);
 			
 		} catch(RemoteException re) {
 			System.err.println("Unable to export client: " + re);
 			System.err.println("The client will not be able to receive replies");
 		}
-		Registry registry = null;
+
+
+		// lookup stub of replica
 		try {
-			registry = LocateRegistry.createRegistry(12345);
+			registry = LocateRegistry.getRegistry(12345);
 		} catch (RemoteException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}  
 		
+		
+		String RepId = "0";// todo: lookup by id
 		try {
-			registry.bind("Sc", Sc);
+			//replica = (VSKeyValueReplica) registry.lookup(RepId);
+			replica = (VSKeyValueRequestHandler) registry.lookup(RepId);
 		} catch (AccessException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (RemoteException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} catch (AlreadyBoundException e) {
+		} catch (NotBoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
-		try {
-			Remote Replicate = registry.lookup(RepAdd);
 		}
 		
 	}
@@ -87,10 +96,30 @@ public class VSKeyValueClient implements VSKeyValueReplyHandler {
 	// #################
 	
 	@Override
-	public void handleReply(VSKeyValueReply reply) {
+	public void handleReply(VSKeyValueReply reply) throws VSKeyValueException {
 		/*
 		 * TODO: Handle incoming replies sent by replicas
 		 */
+		//System.out.println("111111111");
+		_reply = reply;
+		if(_reply.geterror() == -1){
+			error = _reply.geterror();
+			
+		}
+//		if(_reply.getvalue() == null){
+//			throw new VSKeyValueException("value of this key not exist");
+//		}
+		else if(_reply.gettime() !=0){
+			//System.out.println("exist");
+			time = _reply.gettime();
+			value = _reply.getvalue();
+
+		}
+		else{
+			
+			value = _reply.getvalue();
+
+		}
 	}
 
 
@@ -102,26 +131,43 @@ public class VSKeyValueClient implements VSKeyValueReplyHandler {
 		/*
 		 * TODO: Invoke PUT operation
 		 */
+		
+		request = new VSKeyValueRequest(key,Sc,value);
+		replica.handleRequest(request);
 	}
 	
 	public String get(String key) throws VSKeyValueException, RemoteException {
 		/*
 		 * TODO: Invoke GET operation
 		 */
-		return null;
+		//todo  not exist exception
+		request = new VSKeyValueRequest(key,Sc,1);
+		replica.handleRequest(request);
+		if(value == null){
+			throw new VSKeyValueException("error wenn call exist");
+		}
+		return value;
+		
 	}
 
 	public void delete(String key) throws RemoteException {
 		/*
 		 * TODO: Invoke DELETE operation
 		 */
+		request = new VSKeyValueRequest(key,Sc,2);
+		replica.handleRequest(request);
 	}
 
 	public long exists(String key) throws RemoteException {
 		/*
 		 * TODO: Invoke EXISTS operation
 		 */
-		return -1L;
+		request = new VSKeyValueRequest(key,Sc,3);
+		replica.handleRequest(request);
+		if(error == -1){
+			return -1L;
+		}
+		return time;
 	}
 
 	public long reliableExists(String key, int threshold) throws RemoteException {
