@@ -11,11 +11,11 @@ import org.jgroups.Global;
 
 public class timestamp  implements Comparable<timestamp> {
 	private Integer counter;
-//	private String address;
 	private Long processID;
 	
 	public timestamp(int stamp){
 		this.counter = stamp;
+		processID = Thread.currentThread().getId();
 	}
 	
 	public void setCounter(Integer counter) {

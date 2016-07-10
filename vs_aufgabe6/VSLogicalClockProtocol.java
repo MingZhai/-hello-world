@@ -39,25 +39,13 @@ public class VSLogicalClockProtocol extends Protocol  {
 		@Override
 		public void writeTo(DataOutput out) throws IOException {
 			stamp.writeTo((DataOutputStream) out);
-//			byte[] Output = null;
-//			try {
-//				Output = Util.objectToByteBuffer(HeaderCounter);
-//				out.write(Output);
-//			} catch (Exception e) {
-//				e.printStackTrace();
-//			}		
+	
 		}
 		
 		@Override
 		public void readFrom(DataInput in) throws IOException {
 			stamp.readFrom((DataInputStream) in);
-//			byte[] Input = null;
-//			try {
-//				Input = Util.objectToByteBuffer(in);
-//				this.HeaderCounter = (int) Util.objectFromByteBuffer(Input, 0, size());
-//			} catch (Exception e) {
-//				e.printStackTrace();
-//			}						
+					
 		}
 		
 		public timestamp getTimestamp() {
@@ -106,15 +94,17 @@ public class VSLogicalClockProtocol extends Protocol  {
 				timestamp localstamp = new timestamp(LC_Counter.get());
 				switch(CH.getTimestamp().compareTo(localstamp)) {
 				case -1:
-					LC_Counter = CH.g + 1;
+					LC_Counter.incrementAndGet();
 					break;
 				case 1:
-					LC_Counter.incrementAndGet();
-					Message Package = (Message) m.getObject();
-					Event evt = new Event(Event.MSG,Package);
+					LC_Counter.set(CH.getTimestamp().getCounter()+1);
+					break;
+
 				case 0:
+					System.out.println("Error: Equal Timestamps");
 				default :
-					
+					break;
+				}
 			}
 		default:
 			return up_prot.up(evt);

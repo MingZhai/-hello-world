@@ -19,7 +19,7 @@ import org.jgroups.conf.ClassConfigurator;
 
 public final class VSLockTestCases extends ReceiverAdapter {
     private static int num_members = 0;
-    private static final String CLUSTER_NAME = "gruppe999";
+    private static final String CLUSTER_NAME = "gruppe6";
     private static Address own_address;
     private static int own_id;
     private static String path_to_configs; 
