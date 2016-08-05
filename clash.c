@@ -21,14 +21,15 @@ int main() {
 	printf("maximal lange einer eingabezeile: %ld\n",maxargs);
 	*/
 	int ch=0;
+	int flag = 1;
 	char argbuf[maxargs];
-	while(1) {
+	while(flag) {
 			getcwd(buf,sizeof(buf));
 			printf("%s:",buf);
 			buf[0] = '\0';
 			ch = fgets(argbuf,maxargs,stdin);
-			if(ch == EOF)
-				break;				
+			if(ch == 0)
+				flag = 0;				
 			if(ch && *argbuf != '\n') {
  					 makestring(argbuf);
 					 if(strcmp(arglist[numargs-1],"&")==0) {
@@ -45,6 +46,7 @@ int main() {
 			numargs = 0;
 			}
 	}
+	printf("\n");
 	return 0;
 }
 
