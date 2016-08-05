@@ -39,7 +39,6 @@ int main() {
 						    mychdir();
 				     }
 					 else {
-					//		printf("point 3");
 						 	execute(arglist,argbuf);
 				     } 
        		memset(arglist,0,numargs);
@@ -105,11 +104,5 @@ int bg_execute(char *arglist[],char *argbuf) {
 						exit(1);
 				default:
 						;
-					/*	while(wait(&exitstatus) != pid)
-						printf("Exitstatus[");
-						for(int i=0;i<numargs;i++) {
-							printf("%s%s",arglist[i]," ");
-						}
-						printf("] = %d\n",exitstatus); */
-		}
+			    }
 }
